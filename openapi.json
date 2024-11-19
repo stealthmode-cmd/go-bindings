@@ -1,0 +1,220 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Clinical Match API",
+        "version": "1.0.3",
+        "description": "A simple API to match patients to clinical trials."
+    },
+    "paths": {
+        "/version": {
+            "get": {
+                "summary": "Get API version",
+                "description": "Returns the version of the Clinical Match API.",
+                "responses": {
+                    "200": {
+                        "description": "API version information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "version": {
+                                            "type": "string",
+                                            "example": "1.0.0"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/clinicalmatch": {
+            "post": {
+                "summary": "Submit patient notes for clinical trial matching",
+                "description": "Submits a file containing doctor notes about a patient, and a byte count for the file, to find relevant clinical trials.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "patientNotesFile": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file containing notes about the patient from the doctor visit in plain text format."
+                                    },
+                                    "fileSizeBytes": {
+                                        "type": "string",
+                                        "format": "byte",
+                                        "description": "The number of bytes in the patient notes file.",
+                                        "example": "256"
+                                    },
+                                    "location": {
+                                        "type": "object",
+                                        "description": "The geographic location of the patient encounter.",
+                                        "properties": {
+                                            "latitude": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "description": "The latitude of the location.",
+                                                "example": 42.349806
+                                            },
+                                            "longitude": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "description": "The longitude of the location.",
+                                                "example": -71.061490
+                                            }
+                                        },
+                                        "required": [
+                                            "latitude",
+                                            "longitude"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "patientNotesFile",
+                                    "fileSizeBytes"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Matching clinical trials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "matches": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "trialId": {
+                                                        "type": "string",
+                                                        "description": "The ID of the matched clinical trial",
+                                                        "example": "NCT00344331"
+                                                    },
+                                                    "trialName": {
+                                                        "type": "string",
+                                                        "description": "The name of the clinical trial",
+                                                        "example": "Evaluation of Biochemical Markers and Clinical Investigation of Niemann-Pick Disease, Type C"
+                                                    },
+                                                    "locations": {
+                                                        "$ref": "#/components/schemas/ClinicalTrialMatch/properties/locations"
+                                                    },
+                                                    "summary": {
+                                                        "type": "string",
+                                                        "description": "Detailed description of the clinical trial",
+                                                        "example": "Niemann-Pick type C disease (NPC) is an autosomal recessive, lysosomal storage disorder characterized by accumulation of cholesterol and gangliosides. NPC is a rare (estimated prevalence of 1:120,000-150,000) neurodegenerative disorder with a wide clinical spectrum and a variable age of onset. Classically, children with NPC demonstrate neurological dysfunction with cerebellar ataxia, dysarthria, seizures, vertical gaze palsy, motor impairment, dysphagia, psychotic episodes, and progressive dementia. In general, adolescent and adult onset forms have a more insidious onset and slower progression.\n\nThere is no effective treatment for NPC and it is a lethal disorder. A major impediment to the testing of therapeutic interventions is the lack of well-defined outcome measures. The purpose of this protocol is to obtain both baseline and rate of progression data on clinical and biochemical markers that may later be used as an outcome measure in a clinical trial."
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "description": "Status about the clinical trial",
+                                                        "example": "Actively Recruiting"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format or file size mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "File size does not match the specified byte count."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ClinicalTrialMatch": {
+                "type": "object",
+                "properties": {
+                    "trialId": {
+                        "type": "string",
+                        "description": "The unique identifier of the clinical trial"
+                    },
+                    "trialName": {
+                        "type": "string",
+                        "description": "The name of the clinical trial"
+                    },
+                    "locations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/location"
+                        }
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "Detailed description of the clinical trial"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Status about the clinical trial"
+                    }
+                },
+                "required": [
+                    "trialId",
+                    "trialName",
+                    "locations",
+                    "summary"
+                ]
+            },
+            "location": {
+                "type": "object",
+                "properties": {
+                    "facility": {
+                        "type": "string",
+                        "example": "Tufts Medical Center"
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "Boston"
+                    },
+                    "state": {
+                        "type": "string",
+                        "example": "MA"
+                    },
+                    "zip": {
+                        "type": "string",
+                        "example": "02113"
+                    },
+                    "country": {
+                        "type": "string",
+                        "example": "United States"
+                    }
+                }
+            }
+        }
+    }
+}

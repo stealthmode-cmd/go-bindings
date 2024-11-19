@@ -1,0 +1,209 @@
+openapi: 3.0.0
+info:
+  description: A simple API to match patients to clinical trials.
+  title: Clinical Match API
+  version: 1.0.3
+servers:
+- url: /
+paths:
+  /version:
+    get:
+      description: Returns the version of the Clinical Match API.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_version_get_200_response'
+          description: API version information
+      summary: Get API version
+  /v1/clinicalmatch:
+    post:
+      description: "Submits a file containing doctor notes about a patient, and a\
+        \ byte count for the file, to find relevant clinical trials."
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_v1_clinicalmatch_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_v1_clinicalmatch_post_200_response'
+          description: Matching clinical trials
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_v1_clinicalmatch_post_400_response'
+          description: Invalid request format or file size mismatch
+      summary: Submit patient notes for clinical trial matching
+components:
+  schemas:
+    ClinicalTrialMatch:
+      properties:
+        trialId:
+          description: The unique identifier of the clinical trial
+          type: string
+        trialName:
+          description: The name of the clinical trial
+          type: string
+        locations:
+          items:
+            $ref: '#/components/schemas/location'
+          type: array
+        summary:
+          description: Detailed description of the clinical trial
+          type: string
+        status:
+          description: Status about the clinical trial
+          type: string
+      required:
+      - locations
+      - summary
+      - trialId
+      - trialName
+      type: object
+    location:
+      properties:
+        facility:
+          example: Tufts Medical Center
+          type: string
+        city:
+          example: Boston
+          type: string
+        state:
+          example: MA
+          type: string
+        zip:
+          example: "02113"
+          type: string
+        country:
+          example: United States
+          type: string
+      type: object
+    _version_get_200_response:
+      example:
+        version: 1.0.0
+      properties:
+        version:
+          example: 1.0.0
+          type: string
+      type: object
+    _v1_clinicalmatch_post_request_location:
+      description: The geographic location of the patient encounter.
+      properties:
+        latitude:
+          description: The latitude of the location.
+          example: 42.349806
+          format: float
+          type: number
+        longitude:
+          description: The longitude of the location.
+          example: -71.06149
+          format: float
+          type: number
+      required:
+      - latitude
+      - longitude
+      type: object
+    _v1_clinicalmatch_post_request:
+      properties:
+        patientNotesFile:
+          description: The file containing notes about the patient from the doctor
+            visit in plain text format.
+          format: binary
+          type: string
+        fileSizeBytes:
+          description: The number of bytes in the patient notes file.
+          example: !!binary |-
+            MjU2
+          format: byte
+          type: string
+        location:
+          $ref: '#/components/schemas/_v1_clinicalmatch_post_request_location'
+      required:
+      - fileSizeBytes
+      - patientNotesFile
+      type: object
+    _v1_clinicalmatch_post_200_response_matches_inner:
+      example:
+        summary: |-
+          Niemann-Pick type C disease (NPC) is an autosomal recessive, lysosomal storage disorder characterized by accumulation of cholesterol and gangliosides. NPC is a rare (estimated prevalence of 1:120,000-150,000) neurodegenerative disorder with a wide clinical spectrum and a variable age of onset. Classically, children with NPC demonstrate neurological dysfunction with cerebellar ataxia, dysarthria, seizures, vertical gaze palsy, motor impairment, dysphagia, psychotic episodes, and progressive dementia. In general, adolescent and adult onset forms have a more insidious onset and slower progression.
+
+          There is no effective treatment for NPC and it is a lethal disorder. A major impediment to the testing of therapeutic interventions is the lack of well-defined outcome measures. The purpose of this protocol is to obtain both baseline and rate of progression data on clinical and biochemical markers that may later be used as an outcome measure in a clinical trial.
+        trialId: NCT00344331
+        trialName: "Evaluation of Biochemical Markers and Clinical Investigation of\
+          \ Niemann-Pick Disease, Type C"
+        locations: "{}"
+        status: Actively Recruiting
+      properties:
+        trialId:
+          description: The ID of the matched clinical trial
+          example: NCT00344331
+          type: string
+        trialName:
+          description: The name of the clinical trial
+          example: "Evaluation of Biochemical Markers and Clinical Investigation of\
+            \ Niemann-Pick Disease, Type C"
+          type: string
+        locations:
+          $ref: '#/components/schemas/ClinicalTrialMatch/properties/locations'
+        summary:
+          description: Detailed description of the clinical trial
+          example: |-
+            Niemann-Pick type C disease (NPC) is an autosomal recessive, lysosomal storage disorder characterized by accumulation of cholesterol and gangliosides. NPC is a rare (estimated prevalence of 1:120,000-150,000) neurodegenerative disorder with a wide clinical spectrum and a variable age of onset. Classically, children with NPC demonstrate neurological dysfunction with cerebellar ataxia, dysarthria, seizures, vertical gaze palsy, motor impairment, dysphagia, psychotic episodes, and progressive dementia. In general, adolescent and adult onset forms have a more insidious onset and slower progression.
+
+            There is no effective treatment for NPC and it is a lethal disorder. A major impediment to the testing of therapeutic interventions is the lack of well-defined outcome measures. The purpose of this protocol is to obtain both baseline and rate of progression data on clinical and biochemical markers that may later be used as an outcome measure in a clinical trial.
+          type: string
+        status:
+          description: Status about the clinical trial
+          example: Actively Recruiting
+          type: string
+      type: object
+    _v1_clinicalmatch_post_200_response:
+      example:
+        matches:
+        - summary: |-
+            Niemann-Pick type C disease (NPC) is an autosomal recessive, lysosomal storage disorder characterized by accumulation of cholesterol and gangliosides. NPC is a rare (estimated prevalence of 1:120,000-150,000) neurodegenerative disorder with a wide clinical spectrum and a variable age of onset. Classically, children with NPC demonstrate neurological dysfunction with cerebellar ataxia, dysarthria, seizures, vertical gaze palsy, motor impairment, dysphagia, psychotic episodes, and progressive dementia. In general, adolescent and adult onset forms have a more insidious onset and slower progression.
+
+            There is no effective treatment for NPC and it is a lethal disorder. A major impediment to the testing of therapeutic interventions is the lack of well-defined outcome measures. The purpose of this protocol is to obtain both baseline and rate of progression data on clinical and biochemical markers that may later be used as an outcome measure in a clinical trial.
+          trialId: NCT00344331
+          trialName: "Evaluation of Biochemical Markers and Clinical Investigation\
+            \ of Niemann-Pick Disease, Type C"
+          locations: "{}"
+          status: Actively Recruiting
+        - summary: |-
+            Niemann-Pick type C disease (NPC) is an autosomal recessive, lysosomal storage disorder characterized by accumulation of cholesterol and gangliosides. NPC is a rare (estimated prevalence of 1:120,000-150,000) neurodegenerative disorder with a wide clinical spectrum and a variable age of onset. Classically, children with NPC demonstrate neurological dysfunction with cerebellar ataxia, dysarthria, seizures, vertical gaze palsy, motor impairment, dysphagia, psychotic episodes, and progressive dementia. In general, adolescent and adult onset forms have a more insidious onset and slower progression.
+
+            There is no effective treatment for NPC and it is a lethal disorder. A major impediment to the testing of therapeutic interventions is the lack of well-defined outcome measures. The purpose of this protocol is to obtain both baseline and rate of progression data on clinical and biochemical markers that may later be used as an outcome measure in a clinical trial.
+          trialId: NCT00344331
+          trialName: "Evaluation of Biochemical Markers and Clinical Investigation\
+            \ of Niemann-Pick Disease, Type C"
+          locations: "{}"
+          status: Actively Recruiting
+        status: success
+      properties:
+        status:
+          example: success
+          type: string
+        matches:
+          items:
+            $ref: '#/components/schemas/_v1_clinicalmatch_post_200_response_matches_inner'
+          type: array
+      type: object
+    _v1_clinicalmatch_post_400_response:
+      example:
+        message: File size does not match the specified byte count.
+        status: error
+      properties:
+        status:
+          example: error
+          type: string
+        message:
+          example: File size does not match the specified byte count.
+          type: string
+      type: object
